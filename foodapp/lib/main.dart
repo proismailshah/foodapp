@@ -1,166 +1,64 @@
-// ignore_for_file: deprecated_member_use
+import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(const MyApp());
+void main() {
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<Counter>(
-      // <=== PROVIDER
-      create: (context) => Counter(),
-      child: MaterialApp(
-        title: 'Counter App - Compact',
-        home: Scaffold(
-          appBar: AppBar(
-            title: const Text("Page Title"),
-          ),
-          body: const Home(),
-        ),
-      ),
+    return const MaterialApp(
+      title: 'SharedPreferences Demo',
+      home: SharedPreferencesDemo(),
     );
   }
 }
 
-class Home extends StatelessWidget {
-  const Home({
-    Key? key,
-  }) : super(key: key);
+class SharedPreferencesDemo extends StatefulWidget {
+  const SharedPreferencesDemo({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    var count = context.watch<Counter>(); // <=== WATCH
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Consumer<Counter>(
-            // <=== DEPENDENT
-            builder: (context, counter, child) => Text(
-              '${count.count}',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-          ),
-          Builder(builder: (context) {
-            // <=== DEPENDENT
-            final counter = context.read<Counter>();
-            return Column(
-              children: [
-                RaisedButton(
-                  onPressed: () => counter.increment(),
-                  child: const Text("Next Screen"),
-                ),
-                RaisedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: ((context) {
-                          Counter count = context.watch<Counter>();
-                          return ChangeNotifierProvider.value(
-                              value: count, child: const SecondScreen());
-                        }),
-                      ),
-                    );
-                  },
-                  child: const Text("Increment"),
-                ),
-              ],
-            );
-          }),
-        ],
-      ),
-    );
+  SharedPreferencesDemoState createState() => SharedPreferencesDemoState();
+}
+
+class SharedPreferencesDemoState extends State<SharedPreferencesDemo> {
+  late SharedPreferences prefs;
+  // late Future<int> _counter;
+
+  initializing() async {
+    prefs = await SharedPreferences.getInstance();
+    setState(() {});
   }
-}
 
-class Counter with ChangeNotifier {
-  int count = 5;
+  Future<void> _incrementCounter() async {
+    final int counter = (prefs.getInt('counter') ?? 0) + 1;
 
-  void increment() {
-    ++count;
-    notifyListeners();
+    setState(() {
+      prefs.setInt('counter', counter);
+    });
   }
-}
-
-class SecondScreen extends StatefulWidget {
-  const SecondScreen({Key? key}) : super(key: key);
-
-  @override
-  State<SecondScreen> createState() => _SecondScreenState();
-}
-
-class _SecondScreenState extends State<SecondScreen> {
-  late TextEditingController controller;
 
   @override
   void initState() {
-    print('Inistate');
-    controller = TextEditingController();
-    // func(BuildContext context) {
-    //   context.watch()<Counter>.count = 5;
-    // }
-
     super.initState();
-  }
-
-  @override
-  void didChangeDependencies() {
-    print('didChangeDependencies');
-    super.didChangeDependencies();
-  }
-
-  @override
-  void didUpdateWidget(covariant SecondScreen oldWidget) {
-    print('Update the widget');
-    super.didUpdateWidget(oldWidget);
-  }
-
-  @override
-  void dispose() {
-    print('dispose');
-    super.dispose();
+    initializing();
   }
 
   @override
   Widget build(BuildContext context) {
-    var count = context.watch<Counter>();
-    // func(context); // <=== WATCH
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Center(
-            child: Container(
-              color: Colors.red,
-              width: 200,
-              height: 200,
-              child: Center(child: Text(count.toString())),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final counter = context.read<Counter>();
-              counter.increment();
-            },
-            child: Text("Increment"),
-          ),
-        ],
+      appBar: AppBar(
+        title: const Text('SharedPreferences Demo'),
+      ),
+      body: Center(child: Text(prefs.getInt('counter').toString())),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _incrementCounter,
+        tooltip: 'Increment',
+        child: const Icon(Icons.add),
       ),
     );
   }
 }
-
-// class MyCounter extends StateProvider {}
-// class CounterStateNotifier extends StateNotifier<Counter> {
-//   CounterStateNotifier([Counter? counter]) : super(counter ?? Counter(0));
-
-//   void increment() {
-//     state = Counter(state.count + 1);
-//   }
-// }
