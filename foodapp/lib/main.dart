@@ -26,14 +26,26 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class Home extends StatelessWidget {
+class Home extends StatefulWidget {
   const Home({
     Key? key,
   }) : super(key: key);
 
   @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  late int count;
+  @override
+  void initState() {
+    Provider.of<Counter>(context).count = 5;
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    var count = context.watch<Counter>(); // <=== WATCH
+    // var count = context.watch<Counter>(); // <=== WATCH
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -41,7 +53,7 @@ class Home extends StatelessWidget {
           Consumer<Counter>(
             // <=== DEPENDENT
             builder: (context, counter, child) => Text(
-              '${count.count}',
+              '${count}',
               style: Theme.of(context).textTheme.bodyLarge,
             ),
           ),
