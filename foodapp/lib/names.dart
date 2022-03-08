@@ -38,9 +38,7 @@ class NameSearch extends SearchDelegate<String> {
       itemCount: suggestions.length,
       itemBuilder: (BuildContext context, int index) {
         return ListTile(
-          title: Text(
-            suggestions.elementAt(index)
-          ),
+          title: Text(suggestions.elementAt(index)),
           onTap: () {
             result = suggestions.elementAt(index);
             close(context, result);
@@ -55,7 +53,7 @@ class NameSearch extends SearchDelegate<String> {
     final suggestions = names.where((name) {
       return name.toLowerCase().contains(query.toLowerCase());
     });
-
+    print('${suggestions} Suggestions');
     return ListView.builder(
       itemCount: suggestions.length,
       itemBuilder: (BuildContext context, int index) {
