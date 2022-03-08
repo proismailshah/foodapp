@@ -1,178 +1,114 @@
-// ignore_for_file: deprecated_member_use
+import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:location/location.dart';
 
-void main() => runApp(const MyApp());
+void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<Counter>(
-      // <=== PROVIDER
-      create: (context) => Counter(),
-      child: MaterialApp(
-        title: 'Counter App - Compact',
-        home: Scaffold(
-          appBar: AppBar(
-            title: const Text("Page Title"),
-          ),
-          body: const Home(),
-        ),
-      ),
+    return MaterialApp(
+      title: 'Material App',
+      home: LocationScreen(),
     );
   }
 }
 
-class Home extends StatefulWidget {
-  const Home({
+class LocationScreen extends StatefulWidget {
+  const LocationScreen({
     Key? key,
   }) : super(key: key);
 
   @override
-  State<Home> createState() => _HomeState();
+  State<LocationScreen> createState() => _LocationScreenState();
 }
 
-class _HomeState extends State<Home> {
-  late int count;
-  @override
-  void initState() {
-    Provider.of<Counter>(context).count = 5;
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // var count = context.watch<Counter>(); // <=== WATCH
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Consumer<Counter>(
-            // <=== DEPENDENT
-            builder: (context, counter, child) => Text(
-              '${count}',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-          ),
-          Builder(builder: (context) {
-            // <=== DEPENDENT
-            final counter = context.read<Counter>();
-            return Column(
-              children: [
-                RaisedButton(
-                  onPressed: () => counter.increment(),
-                  child: const Text("Next Screen"),
-                ),
-                RaisedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: ((context) {
-                          Counter count = context.watch<Counter>();
-                          return ChangeNotifierProvider.value(
-                              value: count, child: const SecondScreen());
-                        }),
-                      ),
-                    );
-                  },
-                  child: const Text("Increment"),
-                ),
-              ],
-            );
-          }),
-        ],
-      ),
-    );
-  }
-}
-
-class Counter with ChangeNotifier {
-  int count = 5;
-
-  void increment() {
-    ++count;
-    notifyListeners();
-  }
-}
-
-class SecondScreen extends StatefulWidget {
-  const SecondScreen({Key? key}) : super(key: key);
-
-  @override
-  State<SecondScreen> createState() => _SecondScreenState();
-}
-
-class _SecondScreenState extends State<SecondScreen> {
-  late TextEditingController controller;
+class _LocationScreenState extends State<LocationScreen> {
+  Location location = new Location();
+  StreamSubscription? streamData;
+  double? lan;
+  double? lat;
 
   @override
   void initState() {
-    print('Inistate');
-    controller = TextEditingController();
-    // func(BuildContext context) {
-    //   context.watch()<Counter>.count = 5;
-    // }
-
     super.initState();
-  }
+    getLocation();
 
-  @override
-  void didChangeDependencies() {
-    print('didChangeDependencies');
-    super.didChangeDependencies();
-  }
-
-  @override
-  void didUpdateWidget(covariant SecondScreen oldWidget) {
-    print('Update the widget');
-    super.didUpdateWidget(oldWidget);
+    streamData =
+        location.onLocationChanged.listen((LocationData currentLocation) {
+      print(currentLocation.latitude);
+      print(currentLocation.longitude);
+      setState(() {
+        lan = currentLocation.latitude;
+        lat = currentLocation.longitude;
+      });
+    });
   }
 
   @override
   void dispose() {
-    print('dispose');
+    streamData?.cancel();
     super.dispose();
+  }
+
+  getLocation() async {
+    await location.requestPermission();
+    await location.hasPermission();
+    var currentLocation = await location.getLocation();
+    setState(() {
+      print(currentLocation.latitude);
+      print(currentLocation.longitude);
+      lan = currentLocation.latitude;
+      lat = currentLocation.longitude;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    var count = context.watch<Counter>();
-    // func(context); // <=== WATCH
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Center(
-            child: Container(
-              color: Colors.red,
-              width: 200,
-              height: 200,
-              child: Center(child: Text(count.toString())),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final counter = context.read<Counter>();
-              counter.increment();
-            },
-            child: Text("Increment"),
-          ),
-        ],
+      appBar: AppBar(
+        title: Text('Location'),
       ),
+      body: lat == null
+          ? CircularProgressIndicator()
+          : Center(
+              child: Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                          style: TextStyle(
+                              fontSize: 30,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold),
+                          text: 'Latitude',
+                          children: [
+                            TextSpan(
+                                text: '\n$lat',
+                                style:
+                                    TextStyle(fontSize: 30, color: Colors.red))
+                          ]),
+                    ),
+                    RichText(
+                      text: TextSpan(
+                          style: TextStyle(
+                              fontSize: 30,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold),
+                          text: 'Latitude',
+                          children: [
+                            TextSpan(
+                                text: '\n$lan',
+                                style:
+                                    TextStyle(fontSize: 30, color: Colors.red))
+                          ]),
+                    ),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 }
-
-// class MyCounter extends StateProvider {}
-// class CounterStateNotifier extends StateNotifier<Counter> {
-//   CounterStateNotifier([Counter? counter]) : super(counter ?? Counter(0));
-
-//   void increment() {
-//     state = Counter(state.count + 1);
-//   }
-// }
