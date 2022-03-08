@@ -1,178 +1,174 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
+import 'names.dart';
 
-void main() => runApp(const MyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.leanBack,
+    overlays: [SystemUiOverlay.top],
+  );
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<Counter>(
-      // <=== PROVIDER
-      create: (context) => Counter(),
-      child: MaterialApp(
-        title: 'Counter App - Compact',
-        home: Scaffold(
-          appBar: AppBar(
-            title: const Text("Page Title"),
-          ),
-          body: const Home(),
-        ),
+    return MaterialApp(
+      title: 'SearchDelegate',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
+      home: MyHomePage(title: 'SearchDelegate'),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
 
-class Home extends StatefulWidget {
-  const Home({
+class MyHomePage extends StatefulWidget {
+  MyHomePage({
     Key? key,
+    required this.title,
   }) : super(key: key);
 
+  final String title;
+
   @override
-  State<Home> createState() => _HomeState();
+  _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _HomeState extends State<Home> {
-  late int count;
-  @override
-  void initState() {
-    Provider.of<Counter>(context).count = 5;
-    super.initState();
-  }
-
+class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    // var count = context.watch<Counter>(); // <=== WATCH
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Consumer<Counter>(
-            // <=== DEPENDENT
-            builder: (context, counter, child) => Text(
-              '${count}',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-          ),
-          Builder(builder: (context) {
-            // <=== DEPENDENT
-            final counter = context.read<Counter>();
-            return Column(
-              children: [
-                RaisedButton(
-                  onPressed: () => counter.increment(),
-                  child: const Text("Next Screen"),
-                ),
-                RaisedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: ((context) {
-                          Counter count = context.watch<Counter>();
-                          return ChangeNotifierProvider.value(
-                              value: count, child: const SecondScreen());
-                        }),
-                      ),
-                    );
-                  },
-                  child: const Text("Increment"),
-                ),
-              ],
-            );
-          }),
-        ],
-      ),
-    );
-  }
-}
-
-class Counter with ChangeNotifier {
-  int count = 5;
-
-  void increment() {
-    ++count;
-    notifyListeners();
-  }
-}
-
-class SecondScreen extends StatefulWidget {
-  const SecondScreen({Key? key}) : super(key: key);
-
-  @override
-  State<SecondScreen> createState() => _SecondScreenState();
-}
-
-class _SecondScreenState extends State<SecondScreen> {
-  late TextEditingController controller;
-
-  @override
-  void initState() {
-    print('Inistate');
-    controller = TextEditingController();
-    // func(BuildContext context) {
-    //   context.watch()<Counter>.count = 5;
-    // }
-
-    super.initState();
-  }
-
-  @override
-  void didChangeDependencies() {
-    print('didChangeDependencies');
-    super.didChangeDependencies();
-  }
-
-  @override
-  void didUpdateWidget(covariant SecondScreen oldWidget) {
-    print('Update the widget');
-    super.didUpdateWidget(oldWidget);
-  }
-
-  @override
-  void dispose() {
-    print('dispose');
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    var count = context.watch<Counter>();
-    // func(context); // <=== WATCH
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Center(
-            child: Container(
-              color: Colors.red,
-              width: 200,
-              height: 200,
-              child: Center(child: Text(count.toString())),
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: ListView.builder(
+        itemCount: names.length,
+        itemBuilder: (BuildContext context, int index) {
+          return ListTile(
+            title: Text(
+              names.elementAt(index),
             ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final counter = context.read<Counter>();
-              counter.increment();
-            },
-            child: Text("Increment"),
-          ),
-        ],
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.search),
+        onPressed: () async {
+          final result = await showSearch<String>(
+            context: context,
+            delegate: NameSearch(names: names),
+          );
+
+          print(result);
+        },
       ),
     );
   }
 }
 
-// class MyCounter extends StateProvider {}
-// class CounterStateNotifier extends StateNotifier<Counter> {
-//   CounterStateNotifier([Counter? counter]) : super(counter ?? Counter(0));
-
-//   void increment() {
-//     state = Counter(state.count + 1);
-//   }
-// }
+const names = [
+  "Camila	Chapman",
+  "Belinda	Cameron",
+  "Amelia	Harris",
+  "Aldus	Howard",
+  "Mike	Ryan",
+  "Adelaide	Perry",
+  "Derek	Hall",
+  "Cherry	Ryan",
+  "Derek	Owens",
+  "John	Walker",
+  "Belinda	Ferguson",
+  "Vanessa	Barrett",
+  "Julian	Foster",
+  "Jasmine	Evans",
+  "Sabrina	Hunt",
+  "Deanna	Carroll",
+  "Hailey	Murray",
+  "Maximilian	Crawford",
+  "Grace	Wright",
+  "Garry	Murphy",
+  "Catherine	Ferguson",
+  "Amelia	Watson",
+  "Alisa	Baker",
+  "Maria	Miller",
+  "Daisy	Harper",
+  "Michelle	West",
+  "Caroline	Taylor",
+  "Heather	West",
+  "Justin	Lloyd",
+  "Lydia	Cameron",
+  "Daryl	Harris",
+  "Tara	Robinson",
+  "Haris	Wells",
+  "Emily	Scott",
+  "Catherine	Wells",
+  "Ned	Murphy",
+  "Blake	Casey",
+  "Chelsea	Mitchell",
+  "Stuart	Reed",
+  "Ellia	Jones",
+  "Florrie	Lloyd",
+  "Blake	Barnes",
+  "Jack	Cole",
+  "Adele	Henderson",
+  "Jessica	Rogers",
+  "Florrie	Barrett",
+  "Ryan	Owens",
+  "Briony	Dixon",
+  "Alexander	Cole",
+  "Jessica	Casey",
+  "Ryan	Grant",
+  "Emily	Fowler",
+  "Edith	Turner",
+  "Max	Payne",
+  "Melanie	Davis",
+  "Lucas	Mitchell",
+  "Aldus	Warren",
+  "Ashton	Kelley",
+  "Frederick	Armstrong",
+  "Chester	Smith",
+  "Alissa	Riley",
+  "Bruce	Rogers",
+  "Edgar	Armstrong",
+  "Cadie	Cooper",
+  "Ryan	Scott",
+  "Rebecca	Campbell",
+  "Rebecca	Parker",
+  "Grace	Bennett",
+  "Alen	Cunningham",
+  "Lucia	Douglas",
+  "Sydney	Allen",
+  "Roland	Cole",
+  "Eddy	Lloyd",
+  "Haris	Murphy",
+  "Fiona	Farrell",
+  "Honey	Jones",
+  "Edward	Watson",
+  "Ada	Harris",
+  "Jordan	Owens",
+  "Carlos	Stevens",
+  "Alissa	Howard",
+  "Madaline	Smith",
+  "Luke	Carroll",
+  "Paul	Campbell",
+  "Adrian	Murray",
+  "Ashton	Brown",
+  "Ned	Harris",
+  "Michelle	Thomas",
+  "Ted	Evans",
+  "Adelaide	Hawkins",
+  "Sydney	Hall",
+  "Arnold	Ross",
+  "Clark	Stewart",
+  "Carl	Smith",
+  "Vivian	Watson",
+  "Sam	Wells",
+  "Arnold	Stevens",
+  "Vivian	Miller",
+  "John	Hawkins",
+  "Edgar	Payne",
+];
